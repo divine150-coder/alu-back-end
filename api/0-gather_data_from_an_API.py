@@ -1,36 +1,23 @@
 #!/usr/bin/python3
-"""Script to get todos for a user from API"""
+"""Module"""
 
-import requests
-import sys
+if __name__ == "__main__":
 
+    import csv
+    import requests
+    import sys
 
-def main():
-    """main function"""
-    user_id = int(sys.argv[1])
-    todo_url = 'https://jsonplaceholder.typicode.com/todos'
-    user_url = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
+    userId = sys.argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}"
+                        .format(userId))
+    name = user.json().get('username')
+    todos = requests.get('https://jsonplaceholder.typicode.com/todos')
 
-    response = requests.get(todo_url)
-
-    total_questions = 0
-    completed = []
-    for todo in response.json():
-
-        if todo['userId'] == user_id:
-            total_questions += 1
-
-            if todo['completed']:
-                completed.append(todo['title'])
-
-    user_name = requests.get(user_url).json()['name']
-
-    printer = ("Employee {} is done with tasks({}/{}):".format(user_name,
-               len(completed), total_questions))
-    print(printer)
-    for q in completed:
-        print("\t {}".format(q))
-
-
-if __name__ == '__main__':
-    main()
+    filename = userId + '.csv'
+    with open(filename, mode='w') as f:
+        writer = csv.writer(f, delimiter=',', quotechar='"',
+                            quoting=csv.QUOTE_ALL, lineterminator='\n')
+        for task in todos.json():
+            if task.get('userId') == int(userId):
+                writer.writerow([userId, name, str(task.get('completed')),
+                                 task.get('title')])
